@@ -1,14 +1,15 @@
 import bentoml
-from transformers import AutoModelWithLMHead, AutoTokenizer
+#from transformers import AutoModelWithLMHead, AutoTokenizer
 
 from bentoml.adapters import JsonInput
-
+from bentoml.types import JSON_CHARSET, JsonSerializable
 from bentoml.frameworks.transformers import TransformersModelArtifact
+from typing import List
 
-@bentoml.env(pip_packages=["transformers==3.1.0", "torch==1.6.0"])
+@bentoml.env(pip_packages=["transformers==4.3.3.", "torch==1.6.0"])
 @bentoml.artifacts([TransformersModelArtifact("gptModel")])
 class TransformerService(bentoml.BentoService):
-     @bentoml.api(input=JsonInput(), batch=False)
+     @bentoml.api(input=JsonInput(), mb_max_latency=2000, mb_max_batch_size=100, batch=True)
 
     #  def tokenize(self, inputs: pd.DataFrame):
     #     tokenizer = self.artifacts.tokenizer
@@ -23,13 +24,20 @@ class TransformerService(bentoml.BentoService):
     #     pred_token_ids = tf.constant(list(pred_token_ids), dtype=tf.int32)
     #     return pred_tokecn_ids
 
-     def predict(self, parsed_json):
+     def predict(self, parsed_json_list : List[JsonSerializable]):
+         #print(parsed_json_list)
          #print(parsed_json)
-         src_text = parsed_json.get("text")
+         src_text = [parsed_json.get("text") for parsed_json in parsed_json_list]
+         #print((src_text))
          model = self.artifacts.gptModel.get("model")
          tokenizer = self.artifacts.gptModel.get("tokenizer")
-         input_ids = tokenizer.encode(src_text, return_tensors="pt")
-         output = model.generate(input_ids, max_length=50)
+         tokenizer.pad_token = tokenizer.eos_token
+         input_ids = tokenizer(src_text, return_tensors="pt")
+         #print(input_ids)
+         outputs = model.generate(input_ids['input_ids'], max_length=50)
+         #print(outputs)
          #print(output, output.shape, type(output[0]))
-         output = tokenizer.decode(list(output[0]), skip_special_tokens=True)
+         #output = tokenizer.decode(list(output[0]))
+         #for output in outputs.tolist():
+         output = tokenizer.batch_decode(outputs,skip_special_tokens=True)
          return output

@@ -9,7 +9,7 @@ ts = TransformerService()
 
 model_name = "gpt2"
 model = AutoModelWithLMHead.from_pretrained("gpt2-medium")
-tokenizer = AutoTokenizer.from_pretrained("gpt2-medium")
+tokenizer = AutoTokenizer.from_pretrained("gpt2-medium",use_fast=False)
 #>>> # Option 1: Pack using dictionary (recommended)
 artifact = {"model": model, "tokenizer": tokenizer}
 ts.pack("gptModel", artifact)

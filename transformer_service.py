@@ -9,7 +9,7 @@ from typing import List
 @bentoml.env(pip_packages=["transformers==4.3.3.", "torch==1.6.0"])
 @bentoml.artifacts([TransformersModelArtifact("gptModel")])
 class TransformerService(bentoml.BentoService):
-     @bentoml.api(input=JsonInput(), mb_max_latency=2000, mb_max_batch_size=100, batch=True)
+     @bentoml.api(input=JsonInput(), mb_max_latency=20000, mb_max_batch_size=100, batch=True)
 
     #  def tokenize(self, inputs: pd.DataFrame):
     #     tokenizer = self.artifacts.tokenizer
@@ -28,13 +28,13 @@ class TransformerService(bentoml.BentoService):
          #print(parsed_json_list)
          #print(parsed_json)
          src_text = [parsed_json.get("text") for parsed_json in parsed_json_list]
-         #print((src_text))
+         print((src_text))
          model = self.artifacts.gptModel.get("model")
          tokenizer = self.artifacts.gptModel.get("tokenizer")
          tokenizer.pad_token = tokenizer.eos_token
-         input_ids = tokenizer(src_text, return_tensors="pt")
+         input_ids = tokenizer(src_text, return_tensors="pt",padding=True)
          #print(input_ids)
-         outputs = model.generate(input_ids['input_ids'], max_length=50)
+         outputs = model.generate(input_ids['input_ids'], max_length=10)
          #print(outputs)
          #print(output, output.shape, type(output[0]))
          #output = tokenizer.decode(list(output[0]))

@@ -6,7 +6,8 @@ from bentoml.types import JSON_CHARSET, JsonSerializable
 from bentoml.frameworks.transformers import TransformersModelArtifact
 from typing import List
 
-@bentoml.env(pip_packages=["transformers==4.3.3.", "torch==1.6.0"])
+@bentoml.env(docker_base_image="pytorch/pytorch:1.8.1-cuda11.1-cudnn8-devel")
+@bentoml.env(pip_packages=["transformers"])
 @bentoml.artifacts([TransformersModelArtifact("gptModel")])
 class TransformerService(bentoml.BentoService):
      @bentoml.api(input=JsonInput(), mb_max_latency=20000, mb_max_batch_size=100, batch=True)
@@ -28,13 +29,16 @@ class TransformerService(bentoml.BentoService):
          #print(parsed_json_list)
          #print(parsed_json)
          src_text = [parsed_json.get("text") for parsed_json in parsed_json_list]
-         print((src_text))
-         model = self.artifacts.gptModel.get("model")
+         
+         model = self.artifacts.gptModel.get("model").to('cuda')
          tokenizer = self.artifacts.gptModel.get("tokenizer")
+         
          tokenizer.pad_token = tokenizer.eos_token
          input_ids = tokenizer(src_text, return_tensors="pt",padding=True)
+         #print(src_text,len(input_ids['input_ids']),"count",input_ids['input_ids'].size())
+         #len(input_ids) + 40 
          #print(input_ids)
-         outputs = model.generate(input_ids['input_ids'], max_length=10)
+         outputs = model.generate(input_ids['input_ids'], max_length=70)
          #print(outputs)
          #print(output, output.shape, type(output[0]))
          #output = tokenizer.decode(list(output[0]))

@@ -5,7 +5,7 @@ save the tagname
 ### first method
 ```
 bentoml containerize TransformerService:$tagname
-docker run --rm -p 5000:5000 TransformerService:$tagname —debug —enable-microbatch
+docker run --rm -p 5000:5000 TransformerService:$tagname --debug --enable-microbatch --gpus device=0 nvidia/cuda
 ```
 ### second method
 ```
@@ -27,3 +27,12 @@ curl -i \
   --data '{"text": "best movie ever"}' \
   localhost:5000/predict
 ```
+
+## docker image
+```bento_service_pack.py```
+
+```
+@bentoml.env(docker_base_image="pytorch/pytorch:1.8.1-cuda11.1-cudnn8-devel")
+``` 
+
+ 
